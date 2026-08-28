@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dream Chasers — Online Contract</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f5f7;color:#222}
+.wrap{max-width:900px;margin:auto;padding:20px}.card{background:#fff;padding:28px;border-radius:14px;box-shadow:0 4px 20px #0001;margin-bottom:18px}
+h1{margin:0 0 5px;font-size:27px}.sub{font-weight:bold}.muted{color:#666;font-size:14px}
+h2{font-size:20px;margin-top:0}label{display:block;font-weight:bold;margin:13px 0 6px}
+input,textarea{width:100%;padding:12px;border:1px solid #bbb;border-radius:7px;font:inherit}
+textarea{min-height:130px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.full{grid-column:1/-1}
+button{padding:12px 18px;border:0;border-radius:7px;font-weight:bold;cursor:pointer;margin:8px 5px 0 0}
+.primary{background:#222;color:#fff}.secondary{background:#e6e6e6}.success{background:#176b3a;color:#fff}
+.hidden{display:none}.contract{border-top:2px solid #222;margin-top:20px;padding-top:20px}
+.sig{height:80px;border-bottom:1px solid #222;margin-top:15px;display:flex;align-items:end;padding-bottom:6px;font-family:cursive;font-size:25px}
+.notice{padding:12px;background:#f0f3f6;border-radius:7px;font-size:14px;margin-top:15px}
+.row{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:9px 0}.total{font-weight:bold}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+@media print{body{background:#fff}.no-print{display:none!important}.card{box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card no-print">
+<h1>🏠 DREAM CHASERS</h1>
+<div class="sub">HOME IMPROVEMENT — Online Contract</div>
+<p class="muted">Owner creates the contract → customer reviews and signs separately.</p>
+</div>
+
+<div class="card no-print" id="owner">
+<h2>Owner: Create Contract</h2>
+<div class="grid">
+<div><label>Contract Date</label><input id="date" type="date"></div>
+<div><label>Customer Phone</label><input id="phone" type="tel"></div>
+<div class="full"><label>Customer Name</label><input id="name"></div>
+<div class="full"><label>Customer Address</label><input id="address"></div>
+<div class="full"><label>Work & Materials Description</label><textarea id="work" placeholder="Describe the work and materials..."></textarea></div>
+<div><label>Purchase Price ($)</label><input id="price" type="number" min="0" step=".01"></div>
+<div><label>Deposit ($)</label><input id="deposit" type="number" min="0" step=".01"></div>
+<div><label>Progress Payment ($)</label><input id="progress" type="number" min="0" step=".01"></div>
+<div><label>Payment Upon Completion ($)</label><input id="completion" type="number" min="0" step=".01"></div>
+<div><label>Owner Name</label><input id="ownerName" placeholder="Person signing for Dream Chasers"></div>
+</div>
+<button class="primary" onclick="createContract()">Create Contract</button>
+<button class="secondary" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="card hidden" id="contractCard">
+<h2>Contract</h2>
+<div id="contractText"></div>
+
+<div class="notice" id="customerNotice">
+<strong>Customer signature:</strong> Review the information above. If everything is correct, type your full name below as your electronic signature.
+</div>
+
+<div id="customerSign">
+<label>Customer Electronic Signature</label>
+<input id="customerSig" placeholder="Type your full legal name">
+<button class="success" onclick="signCustomer()">Sign Contract</button>
+</div>
+
+<div id="signedResult" class="hidden">
+<div class="notice"><strong>✓ Contract signed by customer.</strong><br>
+Customer signature and signing date have been recorded on this page.</div>
+<div class="sig" id="customerSignature"></div>
+<p class="muted">Signed electronically on <span id="signedDate"></span>.</p>
+<button class="primary no-print" onclick="window.print()">Print / Save Completed Contract</button>
+</div>
+</div>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function money(v){return Number(v||0).toLocaleString('en-US',{style:'currency',currency:'USD'});}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+function createContract(){
+  const name=$('name').value.trim();
+  if(!name){alert('Please enter the customer name.');return;}
+  const price=Number($('price').value)||0, dep=Number($('deposit').value)||0,
+        prog=Number($('progress').value)||0, comp=Number($('completion').value)||0;
+  $('contractText').innerHTML=`
+  <div class="row"><strong>Date</strong><span>${esc($('date').value)}</span></div>
+  <div class="row"><strong>Customer</strong><span>${esc(name)}</span></div>
+  <div class="row"><strong>Address</strong><span>${esc($('address').value)}</span></div>
+  <div class="row"><strong>Telephone</strong><span>${esc($('phone').value)}</span></div>
+  <h3>Work and Materials</h3><p>${esc($('work').value).replace(/\n/g,'<br>')}</p>
+  <h3>Payment Schedule</h3>
+  <div class="row"><span>Purchase Price</span><span>${money(price)}</span></div>
+  <div class="row"><span>Deposit</span><span>${money(dep)}</span></div>
+  <div class="row"><span>Progress Payment</span><span>${money(prog)}</span></div>
+  <div class="row"><span>Payment Upon Completion</span><span>${money(comp)}</span></div>
+  <div class="row total"><span>Remaining Balance</span><span>${money(Math.max(0,price-dep-prog-comp))}</span></div>
+  <h3>Owner Signature</h3>
+  <div class="sig">${esc($('ownerName').value)}</div>
+  <p class="muted">Owner signature</p>`;
+  $('owner').classList.add('hidden');
+  $('contractCard').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function signCustomer(){
+  const sig=$('customerSig').value.trim();
+  if(!sig){alert('Please type your full name to sign.');return;}
+  $('customerSignature').textContent=sig;
+  $('signedDate').textContent=new Date().toLocaleString();
+  $('customerSign').classList.add('hidden');
+  $('customerNotice').classList.add('hidden');
+  $('signedResult').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
